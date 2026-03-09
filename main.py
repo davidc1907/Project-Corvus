@@ -139,7 +139,7 @@ def send_discord_alert(message):
 def main():
     print("Startet Tracker. Polling every 60 seconds")
     print("Sende Test-Alert an Discord...")
-    test_msg = "🚨 **TEST-ALERT** 🚨\nTyp: `B52` (Hex: `ae586c`)\nHöhe: `32000 ft` | Kurs: `095°`\nQuelle: *SYSTEM-TEST*"
+    test_msg = "🚨 **TEST-ALERT** 🚨\nType: `B52` (Hex: `ae586c`)\nAltitude: `32000 ft` | Heading: `095°`\nSource: *SYSTEM-TEST*"
     send_discord_alert(test_msg)
 
     while True:
