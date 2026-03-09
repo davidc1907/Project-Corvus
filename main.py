@@ -157,7 +157,16 @@ def main():
             )
 
             if is_deploying:
-                msg = f"🚨 **ALERT** 🚨 \nType: `{plane_data['type']}` (Hex: `{hex_code}`) \nAltitude: `{int(plane_data['alt'])} ft` \nHeading: `{int(plane_data['hdg'])}°` \nSource: *{plane_data['source']}*"
+                map_link = f"https://globe.adsb.fi/?icao={hex_code}"
+
+                msg = (
+                    f"🚨 **ALERT** 🚨 \n"
+                    f"Type: `{plane_data['type']}` (Hex: `{hex_code}`) \n"
+                    f"Altitude: `{int(plane_data['alt'])} ft` \n"
+                    f"Heading: `{int(plane_data['hdg'])}°` \n"
+                    f"Source: *{plane_data['source']}* \n"
+                    f"🌍 **Live Map:** {map_link}"
+                )
                 print(msg)
                 send_discord_alert(msg)
 
