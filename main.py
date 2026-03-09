@@ -26,10 +26,10 @@ KNOWN_ICAO_HEX = [
     "adfeb7", "adfeb8", "adfeb9", "adfeba",
 
     #VC-25A
-    "adfdf8", "adfdf9",
+    "adfdf8", "adfdf9", "adfeb2", "adfeb3",
 
     #C-32A
-    "ae01e6", "ae01e7", "ae0201", "ae0202",
+    "ae01e6", "ae01e7", "ae0201", "ae0202", "ae4ae8", "ae4ae9", "ae4aea", "ae4aeb",
 
     #RC-135 Rivet Joint
     "ae01c5", "ae01c6", "ae01c7", "ae01c8", "ae01cb", "ae01cd", "ae01ce",
@@ -52,6 +52,21 @@ KNOWN_ICAO_HEX = [
     "ae04a9", "ae04aa", "ae04ab", "ae04ac"
 
 ]
+
+SPECIAL_TARGETS = {
+    "adfdf8": "🇺🇸 AIR FORCE ONE",
+    "adfdf9": "🇺🇸 AIR FORCE ONE",
+    "adfeb2": "🇺🇸 AIR FORCE ONE",
+    "adfeb3": "🇺🇸 AIR FORCE ONE",
+    "ae01e6": "🇺🇸 AIR FORCE TWO",
+    "ae01e7": "🇺🇸 AIR FORCE TWO",
+    "ae0201": "🇺🇸 AIR FORCE TWO",
+    "ae0202": "🇺🇸 AIR FORCE TWO",
+    "ae4ae8": "🇺🇸 AIR FORCE TWO",
+    "ae4ae9": "🇺🇸 AIR FORCE TWO",
+    "ae4aea": "🇺🇸 AIR FORCE TWO",
+    "ae4aeb": "🇺🇸 AIR FORCE TWO"
+}
 
 flight_history = {}
 
@@ -182,13 +197,19 @@ def main():
                 current_hdg = plane_data["hdg"],
                 flight_type = plane_data["type"]
             )
+            is_special = hex_code in SPECIAL_TARGETS
 
-            if is_deploying:
-                map_link = f"https://globe.adsb.fi/?icao={hex_code}"
-                route_info = estimate_route(plane_data["lon"], plane_data["hdg"])
+            if is_deploying or is_special:
+                route_info = estimate_route(plane_data.get("lon"), plane_data.get("hdg"))
+                map_link = f"https://globe.adsb.fi/?icao={hex_code}" if plane_data.get("lon") else "No coordinates"
+
+                if is_special:
+                    prefix = f"⭐ **PRIORITY ALERT @everyone** ⭐\n**Target:** `{SPECIAL_TARGETS[hex_code]}`"
+                else:
+                    prefix = "🚨 **STRATEGIC ALERT** 🚨"
 
                 msg = (
-                    f"🚨 **ALERT** 🚨 \n"
+                    f"{prefix} \n"
                     f"Type: `{plane_data['type']}` (Hex: `{hex_code}`) \n"
                     f"{route_info}\n"
                     f"Altitude: `{int(plane_data['alt'])} ft` \n"
