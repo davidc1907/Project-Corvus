@@ -17,7 +17,7 @@ def send_strategic_alert(callsign, hex_code, full_desc, location, route, alt, sp
     message = (
         f"{prefix}\n"
         f"**Callsign:** {callsign}\n"
-        f"**Type:** {full_desc} (Hex: {hex})\n"
+        f"**Type:** {full_desc} (Hex: {hex_code})\n"
         f"**Location:** 🗺️ {location}\n"
         f"**Route:** {route}\n"
         f"**Altitude:** `{alt} ft`\n"
