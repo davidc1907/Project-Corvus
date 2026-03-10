@@ -12,6 +12,8 @@ def geocode(lat, lon):
 
     r = requests.get(url, timeout=5).json()
 
+    print(f"Debug API-Status: {r.get('status')} | Message: {r.get('error_message', 'None')}")
+
     if r["status"] == "ZERO_RESULTS":
         return "Oceanic Airspace"
 
