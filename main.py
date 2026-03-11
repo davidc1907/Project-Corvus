@@ -36,9 +36,16 @@ def process_target(hex_code, plane):
         location = geocode(plane.get("lat"), plane.get("lon"))
         route = estimate_route(plane.get("lon"), hdg)
 
-        callsign = str(plane.get("flight") or plane.get("callsign") or "N/A").strip()
+        raw_callsign = str(plane.get("flight") or plane.get("callsign") or "").strip()
+        callsign = raw_callsign if raw_callsign else "N/A"
         speed = plane.get("gs") or plane.get("speed") or "N/A"
-        desc = plane.get("desc") or plane.get("t") or "Unknown Aircraft"
+        desc = plane.get("desc") or plane.get("type")  or "Unknown Aircraft"
+        reg = plane.get("reg") or "N/A"
+        ownOp = plane.get("ownOp") or "Unknown Operator"
+        squawk = plane.get("squawk") or "N/A"
+        emergency = plane.get("emergency") or "none"
+        category = plane.get("category") or "N/A"
+        v_speed = plane.get("v_speed") or "N/A"
 
         if is_special:
             if hex_code not in flight_history:
@@ -50,12 +57,17 @@ def process_target(hex_code, plane):
             hex_code=hex_code,
             full_desc=desc,
             location=location,
-            route=route,
             alt=alt,
             speed=speed,
             heading=hdg,
             source=plane.get("source", "API"),
-            is_priority=is_special
+            is_priority=is_special,
+            reg=reg,
+            ownOp=ownOp,
+            squawk=squawk,
+            v_speed=v_speed,
+            emergency=emergency,
+            category=category
         )
         logger.info("Alert dispatched for %s (%s)", callsign, hex_code)
 

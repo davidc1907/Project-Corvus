@@ -30,6 +30,12 @@ class Config:
     atlantic_lon_threshold: float = -10.0
     europe_lon_threshold: float = 5.0
 
+    HOTZONE_BLACK_SEA = (41.0, 47.0, 27.0, 42.0)
+    HOTZONE_BALTICS = (53.0, 60.0, 20.0, 30.0)
+    HOTZONE_MIDDLE_EAST = (29.0, 38.0, 34.0, 48.0)
+
+    HOTZONES = [HOTZONE_BLACK_SEA, HOTZONE_BALTICS, HOTZONE_MIDDLE_EAST]
+
     me_hdg_min: int = 100
     me_hdg_max: int = 160
 

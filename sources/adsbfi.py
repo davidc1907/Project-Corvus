@@ -20,6 +20,13 @@ def fetch_adsbfi():
             "lat": ac.get("lat"),
             "lon": ac.get("lon"),
             "type": ac.get("t"),
+            "desc": ac.get("desc"),
+            "squawk": ac.get("squawk"),
+            "ownOp": ac.get("ownOp"),
+            "reg": ac.get("r"),
+            "v_speed": ac.get("baro_rate"),
+            "emergency": ac.get("emergency"),
+            "category": ac.get("category"),
             "flight": ac.get("flight"),
             "gs": ac.get("gs"),
             "source": "adsb.fi"

@@ -5,7 +5,7 @@ from config import CFG
 logger = logging.getLogger(__name__)
 
 
-def send_strategic_alert(callsign, hex_code, full_desc, location, route, alt, speed, heading, source,
+def send_strategic_alert(callsign, hex_code, full_desc, location, reg, ownOp, squawk, v_speed, emergency, category, alt, speed, heading, source,
                          is_priority=False):
     if not CFG.webhook_url:
         logger.warning("Discord Webhook URL is missing in config")
@@ -17,12 +17,17 @@ def send_strategic_alert(callsign, hex_code, full_desc, location, route, alt, sp
     message = (
         f"{prefix}\n"
         f"**Callsign:** {callsign}\n"
+        f"**Operator:** {ownOp}\n"
         f"**Type:** {full_desc} (Hex: {hex_code})\n"
+        f"**Registration:** {reg}\n"
+        f"**Category:** {category}\n"
+        f"**Squawk:** {squawk}\n"
         f"**Location:** 🗺️ {location}\n"
-        f"**Route:** {route}\n"
         f"**Altitude:** `{alt} ft`\n"
         f"**Speed:** `{speed} kts`\n"
+        f"**Vertical Speed:** `{v_speed} ft/min`\n"
         f"**Heading:** `{heading}°`\n"
+        f"**Emergency:** {emergency}\n"
         f"**Source:** *{source}*\n"
         f"🌍 **Live Map:** {map_link}"
     )
