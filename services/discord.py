@@ -6,12 +6,20 @@ logger = logging.getLogger(__name__)
 
 
 def send_strategic_alert(callsign, hex_code, full_desc, location, reg, ownOp, squawk, v_speed, emergency, category, alt, speed, heading, source,
-                         is_priority=False):
+                         priority_tag="STANDARD"):
     if not CFG.webhook_url:
         logger.warning("Discord Webhook URL is missing in config")
         return
 
-    prefix = "⭐ **PRIORITY ALERT: VIP TARGET** ⭐" if is_priority else "🚨 **STRATEGIC ALERT** 🚨"
+    if priority_tag == "VIP":
+        prefix = "⭐ **PRIORITY ALERT: VIP TARGET** ⭐"
+    elif priority_tag == "HIGH":
+        prefix = "🔴 **HIGH PRIORITY ALERT** 🔴"
+    elif priority_tag == "MEDIUM":
+        prefix = "🟠 **MEDIUM PRIORITY ALERT** 🟠"
+    else:
+        prefix = "🚨 **STRATEGIC ALERT** 🚨"
+
     map_link = f"https://globe.adsb.fi/?icao={hex_code}"
 
     message = (

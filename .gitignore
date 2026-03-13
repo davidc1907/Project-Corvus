@@ -1,6 +1,6 @@
 #Security / Secrets
 .env
-
+corvus-bot.db
 #Python Virtual Environments
 .venv/
 venv/

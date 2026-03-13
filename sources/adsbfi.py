@@ -9,9 +9,6 @@ def fetch_adsbfi():
 
     for ac in r.json().get("ac", []):
 
-        if ac.get("t") not in TARGET_TYPES:
-            continue
-
         hex_code = ac.get("hex")
 
         planes[hex_code] = {

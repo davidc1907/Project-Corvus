@@ -1,23 +1,19 @@
-import requests
-from functools import lru_cache
-from config import CFG
+import reverse_geocode
 
-@lru_cache(maxsize=512)
+
 def geocode(lat, lon):
+    if lat is None or lon is None:
+        return "Unknown Location"
 
-    url = (
-        f"https://maps.googleapis.com/maps/api/geocode/json"
-        f"?latlng={lat},{lon}&result_type=country&key={CFG.google_geo_api}"
-    )
+    coordinates = (lat, lon)
 
-    r = requests.get(url, timeout=5).json()
+    try:
+        geo_result = reverse_geocode.get(coordinates)
 
-    print(f"Debug API-Status: {r.get('status')} | Message: {r.get('error_message', 'None')}")
+        if geo_result:
+            return geo_result.get('country', 'Unknown')
 
-    if r["status"] == "ZERO_RESULTS":
-        return "Oceanic Airspace"
+    except Exception as e:
+        print(f"Error in geocode: {e}")
 
-    if r["status"] == "OK":
-        return r["results"][0]["formatted_address"]
-
-    return "Unknown Region"
+    return "Unknown Location"

@@ -1,8 +1,12 @@
 import time
 from core.history import flight_history
 from config import CFG
+import math
 
-def check_profile(hex_code, alt, hdg):
+def check_profile(hex_code, alt, hdg, lat, lon, plane):
+    score = 0
+    callsign = (plane.get("flight") or plane.get("callsign") or "").strip()
+    is_logistics = any(callsign.startswith(p) for p in ["RCH", "RRR", "CTM"])
     now = time.time()
 
     if CFG.training_mode:
@@ -13,21 +17,100 @@ def check_profile(hex_code, alt, hdg):
             "alt": alt,
             "hdg": hdg,
             "time": now,
-            "last_alert": 0
+            "last_alert": 0,
+            "last_score": 0,
+            "alerted_score": 0
         }
 
         return False
 
     prev = flight_history[hex_code]
+    time_tracked = now - prev["time"]
+    hdg_diff = abs(hdg - prev["hdg"])
+    hdg_diff = min(hdg_diff, 360 - hdg_diff)
 
-    if alt < CFG.min_alt_normal_ft:
+    #Check if Plane is above 28.000 feet if yes -> score + 25
+    if alt > 28000:
+        score += 25
+    elif alt > 20000:
+        score += 15
+
+   #Check if Plane has moved less than 4 degrees in the last 4 minutes. If yes -> score + 25
+    if hdg_diff > CFG.stable_hdg_delta:
+        prev["hdg"] = hdg
+        prev["time"] = now
+    else:
+        if time_tracked >= CFG.stable_hdg_window_sec:
+            score += 25
+            prev["time"] = now
+
+    in_hotzone = False
+    #Check if Plane is in a hotzone if yes -> score + 30
+    if lat is not None and lon is not None:
+        for zone in CFG.HOTZONES:
+            try:
+                lat_min, lat_max, lon_min, lon_max = zone
+
+                if any(v is None for v in (lat_min, lat_max, lon_min, lon_max)):
+                    continue
+
+                if lat_min <= lat <= lat_max and lon_min <= lon <= lon_max:
+                    score += 30
+                    in_hotzone = True
+                    break
+            except (TypeError, ValueError):
+                continue
+
+    #Check if Plane has a projected entry into a hotzone if yes -> score + 20
+    if not in_hotzone and lat is not None and lon is not None:
+        hdg_rad = math.radians(hdg)
+
+        step_lat = math.cos(hdg_rad) * 0.5
+        step_lon = (math.sin(hdg_rad) * 0.5) / max(0.1, math.cos(math.radians(lat)))
+
+        trajectory_hit = False
+
+        for i in range(1, 21):
+            proj_lat = lat + step_lat * i
+            proj_lon = lon + step_lon * i
+
+            for zone in CFG.HOTZONES:
+                zone_lat_min, zone_lat_max, zone_lon_min, zone_lon_max = zone
+                if zone_lat_min <= proj_lat <= zone_lat_max and zone_lon_min <= proj_lon <= zone_lon_max:
+                    trajectory_hit = True
+                    break
+
+            if trajectory_hit:
+                score += 20
+                break
+
+    old_score = prev.get("last_score", 0)
+    prev["last_score"] = score
+
+    #Implement a threshold check as Gate 3
+    proceed_to_gate_4 = False
+    if score >= 80:
+        proceed_to_gate_4 = True
+    elif 60 <= score <= 69:
+        if score > old_score:
+            proceed_to_gate_4 = True
+        else:
+            return False
+    else:
         return False
 
-    if not (CFG.hdg_min <= hdg <= CFG.hdg_max):
-        return False
+    #Dedup and Cooldown as Gate 4
+    if proceed_to_gate_4:
+        time_since_last_alert = now - prev.get("last_alert", 0)
+        score_diff = score - prev.get("alerted_score", 0)
 
-    if now - prev.get("last_alert", 0) > CFG.alert_cooldown_sec:
-        prev["last_alert"] = now
-        return True
+        cooldown_ok = time_since_last_alert > CFG.alert_cooldown_sec
+        score_jump_ok = score_diff > 15
+
+        if cooldown_ok or score_jump_ok:
+            prev["last_alert"] = now
+            prev["alerted_score"] = score
+
+            return score
 
     return False

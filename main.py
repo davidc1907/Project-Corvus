@@ -25,27 +25,36 @@ def process_target(hex_code, plane):
     except (ValueError, TypeError):
         return
 
-    is_deploying = check_profile(hex_code, alt, hdg)
+    profile_score = check_profile(hex_code, alt, hdg, plane.get("lat"), plane.get("lon"), plane)
     is_special = hex_code in SPECIAL_TARGETS
 
     current_time = time.time()
     last_vip_alert = flight_history.get(hex_code, {}).get("last_alert", 0)
     vip_cooldown_ok = (current_time - last_vip_alert) > CFG.alert_cooldown_sec
 
-    if is_deploying or (is_special and vip_cooldown_ok):
+    if profile_score or (is_special and vip_cooldown_ok):
+
+        priority_tag = "STANDARD"
+
+        if is_special:
+            priority_tag = "VIP"
+        elif profile_score > 85:
+            priority_tag = "HIGH"
+        elif profile_score > 70:
+            priority_tag = "MEDIUM"
+
         location = geocode(plane.get("lat"), plane.get("lon"))
-        route = estimate_route(plane.get("lon"), hdg)
 
         raw_callsign = str(plane.get("flight") or plane.get("callsign") or "").strip()
         callsign = raw_callsign if raw_callsign else "N/A"
         speed = plane.get("gs") or plane.get("speed") or "N/A"
-        desc = plane.get("desc") or plane.get("type")  or "Unknown Aircraft"
+        desc = plane.get("desc") or plane.get("type") or "Unknown Aircraft"
         reg = plane.get("reg") or "N/A"
         ownOp = plane.get("ownOp") or "Unknown Operator"
         squawk = plane.get("squawk") or "N/A"
         emergency = plane.get("emergency") or "none"
         category = plane.get("category") or "N/A"
-        v_speed = plane.get("v_speed") or "N/A"
+        v_speed =plane.get("v_speed") or "N/A"
 
         if is_special:
             if hex_code not in flight_history:
@@ -53,23 +62,22 @@ def process_target(hex_code, plane):
             flight_history[hex_code]["last_alert"] = current_time
 
         send_strategic_alert(
-            callsign=callsign,
-            hex_code=hex_code,
-            full_desc=desc,
-            location=location,
-            alt=alt,
-            speed=speed,
-            heading=hdg,
-            source=plane.get("source", "API"),
-            is_priority=is_special,
-            reg=reg,
-            ownOp=ownOp,
-            squawk=squawk,
-            v_speed=v_speed,
-            emergency=emergency,
-            category=category
+            callsign = callsign,
+            hex_code = hex_code,
+            full_desc = desc,
+            location = location,
+            alt = alt,
+            speed = speed,
+            heading = hdg,
+            source = plane.get("source", "API"),
+            reg = reg,
+            ownOp = ownOp,
+            squawk = squawk,
+            v_speed = v_speed,
+            emergency = emergency,
+            category = category
         )
-        logger.info("Alert dispatched for %s (%s)", callsign, hex_code)
+        logger.info(f"Sent alert for {callsign} ({hex_code})")
 
 
 def main():
@@ -82,9 +90,6 @@ def main():
         planes.update(fetch_adsbfi())
         planes.update(fetch_opensky())
         logger.info(f"Fetched {len(planes)} planes total")
-        for hex_code, plane in planes.items():
-            process_target(hex_code, plane)
-
         for hex_code, plane in planes.items():
             process_target(hex_code, plane)
 
