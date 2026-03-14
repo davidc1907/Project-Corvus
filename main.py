@@ -1,5 +1,8 @@
+import os
 import time
 import logging
+from dotenv import load_dotenv
+from supabase import create_client
 
 from utils.logging import setup_logging
 from sources.adsbfi import fetch_adsbfi
@@ -16,6 +19,12 @@ from sources.flightradar import fetch_flightradar
 
 setup_logging()
 logger = logging.getLogger(__name__)
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
 # Process one aircraft and trigger alert if filters pass
@@ -87,6 +96,23 @@ def process_target(hex_code, plane):
             category = category
         )
         logger.info(f"Sent alert for {callsign} ({hex_code})")
+
+        db_data = {
+            "hex_code": hex_code,
+            "callsign": callsign,
+            "lat": plane.get("lat"),
+            "lon": plane.get("lon"),
+            "alt": alt
+        }
+
+        if db_data["lat"] is not None and db_data["lon"] is not None:
+            try:
+                supabase.table("sightings").insert(db_data).execute()
+                logger.info(f"Inserted {callsign} ({hex_code}) into database")
+            except Exception as e:
+                logger.error(f"Error inserting {callsign} ({hex_code}) into database: {e}")
+        else:
+            logger.warning(f"No position data for {callsign} ({hex_code})")
 
 
 def main():
