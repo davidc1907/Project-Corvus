@@ -33,9 +33,11 @@ function processSighting(newSighting) {
             planeFeature.properties.hdg = newSighting.hdg;
             planeFeature.properties.lastSeen = Date.now();
             planeFeature.properties.callsign = newSighting.callsign;
-
+            planeFeature.properties.category = newSighting.category;
+            planeFeature.properties.targetCoords = [newSighting.lon, newSighting.lat];
+            planeFeature.properties.hdg = newSighting.hdg;
+            planeFeature.properties.callsign = newSighting.callsign;
             updatePathsSource();
-
         } else {
             const feature = {
                 "type": "Feature",
@@ -47,6 +49,7 @@ function processSighting(newSighting) {
                     "callsign": newSighting.callsign,
                     "hex": newSighting.hex_code,
                     "hdg": newSighting.hdg,
+                    "category": newSighting.category,
                     "lastSeen": Date.now(),
                     "currentCoords": [newSighting.lon, newSighting.lat],
                     "targetCoords": [newSighting.lon, newSighting.lat],
@@ -108,17 +111,6 @@ function animatePlanes() {
 }
 
 map.on('load', async () => {
-    await new Promise((resolve, reject) => {
-        map.loadImage('plane.png', (error, image) => {
-            if (error) {
-                console.error("Error with loading the img:", error);
-                reject(error);
-                return;
-            }
-            map.addImage('plane-icon', image);
-            resolve();
-        });
-    });
 
     map.addSource('planes-source', {
         type: 'geojson',
@@ -150,15 +142,36 @@ map.on('load', async () => {
     });
 
     map.addLayer({
-        id: 'planes-layer',
-        type: 'symbol',
-        source: 'planes-source',
-        layout: {
-            'icon-image': 'plane-icon',
-            'icon-size': 0.8,
-            'icon-allow-overlap': true,
-            'icon-rotate': ['get', 'hdg']
-        }
+    id: 'planes-layer',
+    type: 'symbol',
+    source: 'planes-source',
+    layout: {
+        'icon-image': [
+            'match',
+            ['get', 'category'],
+            'tanker', 'plane-tanker',
+            'combat', 'plane-combat',
+            'isr', 'plane-isr',
+            'vip', 'plane-vip',
+            'plane-transport' // Fallback
+        ],
+        'icon-size': 0.05,
+        'icon-allow-overlap': true,
+        'icon-rotate': ['get', 'hdg']
+    },
+        'paint': {
+        'icon-color': [
+            'match',
+            ['get', 'category'],
+            'tanker', '#0074D9',
+            'combat', '#FF4136',
+            'isr', '#B10DC9',
+            'vip', '#FFD700',
+            'uav', '#01FF70',
+            'helicopter', '#AAAAAA',
+            '#FF4136'
+        ]
+    }
     });
 
     map.on('click', 'planes-layer', (e) => {
@@ -178,6 +191,20 @@ map.on('load', async () => {
             `)
             .addTo(map);
     });
+
+    const icons = [
+    { name: 'plane-transport', url: 'assets/plane-transport.png' },
+    { name: 'plane-tanker', url: 'assets/plane-tanker.png' },
+    { name: 'plane-combat', url: 'assets/plane-combat.png' },
+    { name: 'plane-isr', url: 'assets/plane-isr.png' },
+    { name: 'plane-vip', url: 'assets/plane-vip.png' }
+];
+    icons.forEach(icon => {
+    map.loadImage(icon.url, (error, image) => {
+        if (error) throw error;
+        map.addImage(icon.name, image);
+    });
+});
 
     map.on('click', (e) => {
         const features = map.queryRenderedFeatures(e.point, { layers: ['planes-layer'] });
@@ -199,7 +226,7 @@ map.on('load', async () => {
         .from('sightings')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(1000);
 
     if (data) {
         data.reverse().forEach(sighting => {
@@ -219,14 +246,14 @@ map.on('load', async () => {
 
     setInterval(() => {
         const now = Date.now();
-        const timeout = 2 * 60 * 60 * 1000;
+        const timeout = 3 * 60 * 1000;
 
         const oldLength = activePlanes.features.length;
 
-        activePlanes.features = activePlanes.features.filter(f => (now - f.properties.lastSeen) < timeout);
-
         if (activePlanes.features.length < oldLength) {
             map.getSource('planes-source').setData(activePlanes);
+
+            updatePathsSource();
         }
     }, 60000);
 });

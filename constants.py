@@ -1,8 +1,33 @@
-TARGET_TYPES = [
-    "E6", "R135", "V25", "C32", "E3TF", "B2", "E4",
-    "RQ4", "U2", "B52", "B1", "K35R", "MQ9", "P8",
-    "MQ4", "F35", "F22", "EUFI", "V22",
+MIL_TRANS = [
+    "C130", "C30J", "C17", "A400", "C5", "C390", "CN35", "C295", "AN12", "AN22", "AN24", "AN26",
+    "AN30", "AN32", "AN72", "AN74", "AN124", "IL76", "IL18", "C27J", "C212", "CL60", "L100", "C160"
 ]
+
+MIL_TANKER = ["K35R", "A332", "KC10", "K135", "KC130", "IL78", "V10"]
+
+MIL_COMBAT = [
+    "F15", "F16", "F18", "F22", "F35", "EUFI", "TORN", "RAFY", "M2K", "F4", "F5", "A10",
+    "SU24", "SU25", "SU27", "SU30", "SU34", "SU35", "SU57", "MIG21", "MIG23", "MIG25", "MIG29", "MIG31",
+    "B1", "B2", "B52", "TU95", "TU160", "TU22", "H6", "J10", "J11", "J15", "J16", "J20"
+]
+
+MIL_ISR = [
+    "E3TF", "E3CF", "E6", "E8", "R135", "P8", "P3", "C135", "E2", "FA50", "GLF4", "GLF5",
+    "GLEX", "B350", "B200", "BE20", "C208", "PC12", "F2TH", "F900", "L39", "L159", "M346"
+]
+
+MIL_VIP = [
+    "A310", "A319", "A320", "A321", "A343", "A359", "B737", "B738", "B739", "B742", "B744",
+    "B748", "B752", "B762", "B763", "B772", "B788", "B789", "IL62", "IL96", "TU134", "TU154", "TU204", "TU214"
+]
+
+MIL_HELO = [
+    "H60", "H47", "WA64", "EH10", "NH90", "H53", "AS32", "EC35", "B06", "UH1", "MI8", "MI17", "MI24", "MI26", "MI28", "KA50", "KA52"
+]
+
+MIL_UAV = ["MQ9", "RQ4", "GLO6", "Q4", "HERO"]
+
+TARGET_TYPES = MIL_TRANS + MIL_TANKER + MIL_COMBAT + MIL_ISR + MIL_VIP + MIL_HELO + MIL_UAV
 
 KNOWN_ICAO_HEX: set[str] = {
     # E-6B Mercury
